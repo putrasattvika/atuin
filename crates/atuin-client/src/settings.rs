@@ -440,6 +440,9 @@ pub struct Settings {
     pub enter_accept: bool,
     pub smart_sort: bool,
 
+    #[serde(default = "Settings::interactive_filter_modes_default")]
+    pub interactive_filter_modes: Vec<FilterMode>,
+
     #[serde(default)]
     pub stats: Stats,
 
@@ -513,6 +516,15 @@ impl Settings {
             Some(v) => Ok(OffsetDateTime::parse(v.as_str(), &Rfc3339)?),
             None => Ok(OffsetDateTime::UNIX_EPOCH),
         }
+    }
+
+    fn interactive_filter_modes_default() -> Vec<FilterMode> {
+        vec![
+            FilterMode::Global,
+            FilterMode::Host,
+            FilterMode::Session,
+            FilterMode::Directory,
+        ]
     }
 
     pub fn save_sync_time() -> Result<()> {

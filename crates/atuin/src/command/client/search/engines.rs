@@ -21,6 +21,7 @@ pub fn engine(search_mode: SearchMode) -> Box<dyn SearchEngine> {
 pub struct SearchState {
     pub input: Cursor,
     pub filter_mode: FilterMode,
+    pub interactive_filter_mode_idx: usize,
     pub context: Context,
 }
 

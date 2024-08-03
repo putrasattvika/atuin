@@ -23,7 +23,7 @@ use atuin_client::{
     database::{current_context, Database},
     history::{store::HistoryStore, History, HistoryStats},
     settings::{
-        CursorStyle, ExitMode, FilterMode, KeymapMode, PreviewStrategy, SearchMode, Settings,
+        CursorStyle, ExitMode, KeymapMode, PreviewStrategy, SearchMode, Settings,
     },
 };
 
@@ -452,27 +452,9 @@ impl State {
             }
             KeyCode::Char('u') if ctrl => self.search.input.clear(),
             KeyCode::Char('r') if ctrl => {
-                let filter_modes = if settings.workspaces && self.search.context.git_root.is_some()
-                {
-                    vec![
-                        FilterMode::Global,
-                        FilterMode::Host,
-                        FilterMode::Session,
-                        FilterMode::Directory,
-                        FilterMode::Workspace,
-                    ]
-                } else {
-                    vec![
-                        FilterMode::Global,
-                        FilterMode::Host,
-                        FilterMode::Session,
-                        FilterMode::Directory,
-                    ]
-                };
-
-                let i = self.search.filter_mode as usize;
-                let i = (i + 1) % filter_modes.len();
-                self.search.filter_mode = filter_modes[i];
+                self.search.interactive_filter_mode_idx += 1;
+                self.search.interactive_filter_mode_idx %= settings.interactive_filter_modes.len();
+                self.search.filter_mode = settings.interactive_filter_modes[self.search.interactive_filter_mode_idx];
             }
             KeyCode::Char('s') if ctrl => {
                 self.switched_search_mode = true;
@@ -1027,15 +1009,8 @@ pub async fn history(
         tab_index: 0,
         search: SearchState {
             input,
-            filter_mode: if settings.workspaces && context.git_root.is_some() {
-                FilterMode::Workspace
-            } else if settings.shell_up_key_binding {
-                settings
-                    .filter_mode_shell_up_key_binding
-                    .unwrap_or(settings.filter_mode)
-            } else {
-                settings.filter_mode
-            },
+            filter_mode: settings.interactive_filter_modes[0],
+            interactive_filter_mode_idx: 0,
             context,
         },
         engine: engines::engine(search_mode),
